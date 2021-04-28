@@ -1,0 +1,24 @@
+#!/bin/bash
+#BSUB -W 02:00
+#BSUB -q pbatch
+#BSUB -J CLAMR-l7-nbr
+#BSUB -nnodes 16
+
+SCRIPT=nbr
+for i in 1 2 4 8 12 16
+do
+
+LSB_NNODES=$i
+LSB_NTASKS=$(echo "${LSB_NNODES} * 40" | bc)
+DIR=/p/gpfs1/bridges7/${LSB_JOBNAME}/${LSB_NNODES}
+JOBSIZE=$(echo "scale=1;2048*sqrt(${LSB_NNODES})" | bc | cut -f 1 -d.)
+echo "Setting up ${LSB_JOBNAME} on ${LSB_NNODES} nodes (${LSB_NTASKS} ranks)"
+mkdir -p ${DIR}
+rm -f ${DIR}/clamr_mpionly
+cp ${HOME}/CLAMR/build-lassen-${SCRIPT}/clamr_mpionly ${DIR}/clamr_mpionly
+echo "Running ${LSB_JOBNAME} with N=${JOBSIZE}"
+cd ${DIR}
+lrun -N ${LSB_NNODES} -T 40 ./clamr_mpionly -n ${JOBSIZE} -l 2 -t 500 -i 100 > ${LSB_JOBNAME}-${LSB_NNODES}.out
+echo "Finished MPI Run"
+
+done

@@ -1,0 +1,32 @@
+#!/bin/tcsh
+
+    ### LSF syntax
+    #BSUB -nnodes 2                   #number of nodes
+    #BSUB -W 20                       #walltime in minutes
+    #BSUB -e myerrors.txt             #stderr
+    #BSUB -o myoutput.txt             #stdout
+    #BSUB -J dk-main-generate         #name of job
+    #BSUB -q pbatch                   #queue to use
+
+    ### Shell scripting
+    date; hostname
+    echo -n 'JobID is '; echo $LSB_JOBID
+    ###cd /p/gscratch1/kruse11/project
+    ###cp ~/inputs/run2048.inp .
+
+    cd /g/g15/kruse11/Mochi
+    source /g/g15/kruse11/spack/share/spack/setup-env.sh
+    ###source setupMochiEnv.sh
+    spacktivate -d .
+    cd sds-keyval-copy/sds-keyval-master/pmpi
+    ### Launch parallel executable
+
+    ### Start the server, build the input file
+    sdskv-server-daemon -f serveraddr.txt tcp pmpiDB
+    cat serveraddr.txt > input.txt
+    cat otherargs.txt >> input.txt
+
+    ### preload the pmpi shared file, run the main program
+    ulimit -c unlimited
+    LD_PRELOAD=./pmpi-lib.so lrun -N 2 -T 1 --core_cpu=lwcore ./main-generate $(<input.txt)
+    echo 'Done'
