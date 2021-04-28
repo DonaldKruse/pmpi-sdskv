@@ -16,17 +16,19 @@
 
     cd /g/g15/kruse11/Mochi
     source /g/g15/kruse11/spack/share/spack/setup-env.sh
-    ###source setupMochiEnv.sh
     spacktivate -d .
-    cd sds-keyval-copy/sds-keyval-master/pmpi
+    cd pmpi 
     ### Launch parallel executable
 
     ### Start the server, build the input file
     sdskv-server-daemon -f serveraddr.txt tcp pmpiDB
+    sleep 3
     cat serveraddr.txt > input.txt
     cat otherargs.txt >> input.txt
 
     ### preload the pmpi shared file, run the main program
     ulimit -c unlimited
     LD_PRELOAD=./pmpi-lib.so lrun -N 2 -T 1 --core_cpu=lwcore ./main-generate $(<input.txt)
+
+    ./main-get $(<input.txt)
     echo 'Done'
