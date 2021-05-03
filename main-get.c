@@ -104,6 +104,8 @@ int main(int argc, char *argv[])
     printf("\n\n\n");
     printf("Getting key-value pairs from database\n");
     sdskv_database_id_t db_id;
+    printf("kvph is %u\n", kvph);
+    printf("db_name is %s\n", db_name);
     ret = sdskv_open(kvph, db_name, &db_id);
     if(ret == 0) {
         printf("Successfuly opened database %s, id is %ld\n", db_name, db_id);
