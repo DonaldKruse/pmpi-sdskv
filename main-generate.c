@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
     } else {
         // we are the first rank
         int i;
-        for (i = 0; i < 4; i++) {
+        for (i = 0; i < 25; i++) {
             x = 2*i + 1;
 	    printf("Rank 0 sending %d to Rank 1\n", x);
             MPI_Isend(&x, 1, MPI_INT,

@@ -24,7 +24,17 @@
 
 
 
-
+/** 
+ * The keys are generated from the rank and these postfixes.
+ * A valid key would look like "<rank>:<postfix>".
+ * Keys are generated in get_key().
+ * Eventually it would be nice to either define these
+ * postfixes in the header fileor read in a file of 
+ * postfixes during initialization.
+ * This file could include threshold values as well.
+ *
+ * Right now this array is not really being used.
+ */
 static const char* key_postfix[] = {"MPI_Isend",
                                     "MPI_Recv"};
 static const unsigned total_keys = 2;
@@ -35,12 +45,14 @@ static const unsigned total_keys = 2;
  * the database
  */
 static unsigned long num_recv = 0;
-static unsigned long tot_recv = 999;
-static unsigned int threshold_recv = 0;
+static unsigned long tot_recv = 0;
+//extern static unsigned int global_threshold_recv;
+extern unsigned int global_threshold_recv;
 
 static unsigned long num_isend = 0;
-static unsigned long tot_isend = 111;
-static unsigned int threshold_isend = 0;
+static unsigned long tot_isend = 0;
+//extern static unsigned int global_threshold_isend;
+extern unsigned int global_threshold_isend;
 
 char* get_key(int rank, const char* postfix) {
     // we need to get the number of characters for the key.
@@ -64,7 +76,6 @@ char* get_key(int rank, const char* postfix) {
 	printf("Number of ranks is >= 1000. Augment this function, otherwise quitting...\n");
 	exit(1);
     }
-    //printf("numchars is %d\n", numchars);
     char* key = (char*) malloc((numchars+1)*sizeof(char)); // the +1 is for null terminator
     if (!key) {
 	printf("get_key(): malloc unsuccessful. Quitting...\n");
@@ -78,7 +89,6 @@ char* get_key(int rank, const char* postfix) {
 	return NULL;
     }
     key[numchars] = 0;
-    //printf("Rank %d: key created is %s\n", rank, key);
     return key;
 } 
 
@@ -86,6 +96,8 @@ int MPI_Init(int *argc, char ***argv)
 {
     int mpi_init_ret;
     int ssg_ret;
+    const char* filename = "pmpi-params.txt";
+    int ret;
 
 
     if(*argc != 5)
@@ -95,6 +107,11 @@ int MPI_Init(int *argc, char ***argv)
         fprintf(stderr, "  Example: %s tcp://localhost:1234 1 foo 1000\n", (*argv)[0]);
         return(-1);
     }
+    
+    /**
+     * Eventually this file open stuff needs to move somewhere else or be wrapped.
+     * See get_params() in pmpi-common.c.
+     */
 
     mpi_init_ret = PMPI_Init(argc, argv);
     init_margo_open_db_check_error(argc, argv);
@@ -119,6 +136,8 @@ int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest,
 int MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest,
               int tag, MPI_Comm comm, MPI_Request *request)
 {
+    // Much of this needs to be wrapped so the user
+    // just has to specify parameters like threshold values...
     static const char* key_prefix = "MPI_Isend";
     static const hg_size_t dsize = sizeof(unsigned long);
 
@@ -126,22 +145,24 @@ int MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest,
     int rank;
     ret = PMPI_Isend(buf, count, datatype, dest, tag, comm, request);
     num_isend++;
-    if (num_isend >= threshold_isend) {
+    if (num_isend >= global_threshold_isend) {
 	PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	char* key = get_key(rank, key_prefix);
 	unsigned ksize = strlen(key);
-	printf("The key is '%s' and has length %u\n", key, ksize);
+	tot_isend += num_isend;
 	sdskv_put_check_err( (const void*) key, ksize,
-			     (const void*) &num_isend, dsize);
+			     (const void*) &tot_isend, dsize);
 	free(key);
+	num_isend = 0;
     }
-
     return ret;
 }
 
 int MPI_Recv(void *buf, int count, MPI_Datatype datatype,
              int source, int tag, MPI_Comm comm, MPI_Status *status)
 {
+    // Much of this needs to be wrapped so the user
+    // just has to specify parameters like threshold values...
     static const char* key_prefix = "MPI_Recv";
     static const hg_size_t dsize = sizeof(unsigned long);
     int ret;
@@ -150,14 +171,15 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype,
 
     ret = PMPI_Recv(buf, count, datatype, source, tag, comm, status);
     num_recv++;
-    if (num_recv >= threshold_recv ) {
+    if (num_recv >= global_threshold_recv ) {
 	PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	char* key = get_key(rank, key_prefix);
 	unsigned ksize = strlen(key);
-	printf("The key is '%s' and has length %u\n", key, ksize);
+	tot_recv += num_recv;
 	sdskv_put_check_err( (const void*) key, ksize,
-			     (const void*) &num_recv, dsize);
+			     (const void*) &tot_recv, dsize);
 	free(key);
+	num_recv = 0;
     }
     return ret;
 }
@@ -195,5 +217,3 @@ int MPI_Finalize()
     pmpi_finalize_ret = PMPI_Finalize();
     return pmpi_finalize_ret;
 }
-
-

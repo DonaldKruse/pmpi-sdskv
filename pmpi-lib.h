@@ -6,6 +6,9 @@
 #include "../include/sdskv-server.h"
 #include "../include/sdskv-common.h"
 
+
+char* get_key(int rank, const char* postfix);
+
 int MPI_Init(int *argc, char ***argv);
 
 int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest,

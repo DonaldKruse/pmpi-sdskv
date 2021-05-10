@@ -25,6 +25,9 @@
 //                             "MPI_Finalize"};
 //static const unsigned total_keys = 5;
 
+unsigned int global_threshold_recv;
+unsigned int global_threshold_isend;
+
 
 typedef struct pmpi_counter_t {
     int rank;
@@ -34,6 +37,7 @@ typedef struct pmpi_counter_t {
 } pmpi_counter;
 
 
+void get_parameters();
 
 static void my_membership_update_cb(void* uargs,
                                     ssg_member_id_t member_id,
@@ -50,5 +54,6 @@ int sdskv_put_check_err(const void *key, hg_size_t ksize,
 int sdskv_shutdown_service_cleanup();
 
 int init_margo_open_db_check_error(int* argc, char*** argv);
+
 
 #endif

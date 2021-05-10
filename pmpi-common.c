@@ -23,9 +23,33 @@ hg_addr_t svr_addr;
 margo_instance_id mid;
 
 
+/* TODO these need to be a struct I think */
+//static unsigned int global_threshold_recv;
+//static unsigned int global_threshold_isend;
 
 
-
+void get_parameters()
+{
+    const char* filename = "pmpi-params.txt";
+    FILE* fi = NULL;
+    int ret;
+    fi = fopen(filename, "r");
+    if (!fi) {
+	printf("Could not open %s. Quitting...\n", filename);
+	exit(1);
+    }
+    if ((ret = fscanf(fi, "%u", &global_threshold_recv))  == EOF) {
+	printf("EOF found before scanning value for `global_threshold_recv`.");
+	printf(" Quitting...\n");
+	exit(1);
+    }
+    if ((ret = fscanf(fi, "%u", &global_threshold_isend))  == EOF) {
+	printf("EOF found before scanning value for `global_threshold_isend`.");
+	printf(" Quitting...\n");
+	exit(1);
+    }
+    fclose(fi);
+}
 
 static void my_membership_update_cb(void* uargs,
                                     ssg_member_id_t member_id,
@@ -97,7 +121,7 @@ int init_margo_open_db_check_error(int* argc, char*** argv) {
     uint8_t mplex_id;
     uint32_t num_keys;
     hg_return_t hret;
-
+	
     sdskv_svr_addr_str = (*argv)[1];
     printf("the server address is %s\n", sdskv_svr_addr_str);
     mplex_id          = atoi((*argv)[2]);
@@ -106,7 +130,33 @@ int init_margo_open_db_check_error(int* argc, char*** argv) {
 
 
     int rank;
+    MPI_Status status;
     PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    // TODO - there really should broadcast a struct..
+    // this will work for now, but obviously it won't scale well.
+    /* Get threshold parameters */
+    if (rank == 0) {
+	get_parameters();
+    }
+    ret = PMPI_Bcast(&global_threshold_recv, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+    if (ret != MPI_SUCCESS) {
+	printf("Could not broadcast global_threshold_recv! Quitting...\n");
+	PMPI_Finalize();
+	exit(1);
+    }
+    if (rank != 0)
+	printf("Rank %d got global_threshold_recv (%u)\n", rank, global_threshold_recv);
+
+    ret = PMPI_Bcast(&global_threshold_isend, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+    if (ret != MPI_SUCCESS) {
+	printf("Could not broadcast global_threshold_isend! Quitting...\n");
+	PMPI_Finalize();
+	exit(1);
+    }
+    if (rank != 0)
+	printf("Rank %d got global_threshold_isend (%u)\n", rank, global_threshold_recv);
+    PMPI_Barrier(MPI_COMM_WORLD);
 
 
     /* initialize Margo using the transport portion of the server

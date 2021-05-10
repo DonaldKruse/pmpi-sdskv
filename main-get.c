@@ -194,6 +194,7 @@ int main(int argc, char *argv[])
     	}
     }
     free(value);
+    printf("\n\n\n\n========= Done getting kv-pairs =========\n\n\n\n");
 
     //for(unsigned i=0; i < num_keys; i++) {
     //    auto k = keys[rand() % keys.size()];
