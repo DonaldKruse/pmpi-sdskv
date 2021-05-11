@@ -35,9 +35,12 @@
  *
  * Right now this array is not really being used.
  */
-static const char* key_postfix[] = {"MPI_Isend",
-                                    "MPI_Recv"};
-static const unsigned total_keys = 2;
+static const char* key_postfix[] = {
+    "MPI_Isend",
+    "MPI_Send",
+    "MPI_Recv"
+};
+static const unsigned total_keys = 3;
 
 
 /**
@@ -46,13 +49,16 @@ static const unsigned total_keys = 2;
  */
 static unsigned long num_recv = 0;
 static unsigned long tot_recv = 0;
-//extern static unsigned int global_threshold_recv;
-extern unsigned int global_threshold_recv;
+unsigned int global_threshold_recv;
 
 static unsigned long num_isend = 0;
 static unsigned long tot_isend = 0;
-//extern static unsigned int global_threshold_isend;
-extern unsigned int global_threshold_isend;
+unsigned int global_threshold_isend;
+
+static unsigned long num_send = 0;
+static unsigned long tot_send = 0;
+unsigned int global_threshold_send;
+
 
 char* get_key(int rank, const char* postfix) {
     // we need to get the number of characters for the key.
@@ -78,13 +84,13 @@ char* get_key(int rank, const char* postfix) {
     }
     char* key = (char*) malloc((numchars+1)*sizeof(char)); // the +1 is for null terminator
     if (!key) {
-	printf("get_key(): malloc unsuccessful. Quitting...\n");
+	printf("error get_key(): malloc unsuccessful. Quitting...\n");
 	exit(1);
     }
     int err;
     err = snprintf(key, numchars+1,"%u:%s",rank, postfix);
     if (err < 0) {
-	printf("get_key(): snprinf returned %d (error)\n", err);
+	printf("error get_key(): snprinf returned %d (error)\n", err);
 	free(key);
 	return NULL;
     }
@@ -98,6 +104,8 @@ int MPI_Init(int *argc, char ***argv)
     int ssg_ret;
     const char* filename = "pmpi-params.txt";
     int ret;
+    int rank;
+    int world_size;
 
 
     if(*argc != 5)
@@ -114,6 +122,67 @@ int MPI_Init(int *argc, char ***argv)
      */
 
     mpi_init_ret = PMPI_Init(argc, argv);
+
+
+    PMPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    /* Write all the keys to a file so that it is easier to know them a priori */
+    if (rank == 0) {
+	int postfix;
+	int r;
+	char* key = NULL;
+	
+	FILE* fp = fopen("keys.txt", "w+");
+	if (fp == NULL) {
+	    printf("Could not open 'keys.txt'. Quitting...\n");
+	    exit(1);
+	}
+
+	for (postfix = 0; postfix < total_keys; postfix++) {
+	    for (r = 0; r < world_size; r++) {
+		key = get_key(r, key_postfix[postfix]); 
+		fputs(key, fp);
+		fputs("\n", fp);
+		free(key);
+	    }
+	}
+	fclose(fp);
+    }
+    PMPI_Barrier(MPI_COMM_WORLD);
+
+    // TODO - there really should broadcast a struct..
+    // this will work for now, but obviously it won't scale well.
+    /* Get threshold parameters */
+    if (rank == 0) {
+	get_parameters();
+    }
+    ret = PMPI_Bcast(&global_threshold_recv, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+    if (ret != MPI_SUCCESS) {
+	printf("Could not broadcast global_threshold_recv! Quitting...\n");
+	PMPI_Finalize();
+	exit(1);
+    }
+    if (rank != 0)
+	printf("Rank %d got global_threshold_recv (%u)\n", rank, global_threshold_recv);
+
+    ret = PMPI_Bcast(&global_threshold_isend, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+    if (ret != MPI_SUCCESS) {
+	printf("Could not broadcast global_threshold_isend! Quitting...\n");
+	PMPI_Finalize();
+	exit(1);
+    }
+    if (rank != 0)
+	printf("Rank %d got global_threshold_isend (%u)\n", rank, global_threshold_recv);
+    ret = PMPI_Bcast(&global_threshold_send, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+    if (ret != MPI_SUCCESS) {
+	printf("Could not broadcast global_threshold_send! Quitting...\n");
+	PMPI_Finalize();
+	exit(1);
+    }
+    if (rank != 0)
+	printf("Rank %d got global_threshold_send (%u)\n", rank, global_threshold_recv);
+
+    PMPI_Barrier(MPI_COMM_WORLD);
     init_margo_open_db_check_error(argc, argv);
 
 
@@ -124,63 +193,52 @@ int MPI_Init(int *argc, char ***argv)
 int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest,
              int tag, MPI_Comm comm)
 {
+
+    static const char* key_postfix = "MPI_Send";
+    static const hg_size_t dsize = sizeof(unsigned long);
+    static char* key = NULL;
+    int rank;
     int ret;
-
+    if (key == NULL) {
+    	PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	key = get_key(rank, key_postfix);
+    }
     ret = PMPI_Send(buf, count, datatype, dest, tag, comm);
-    //num_send++;
-    // TODO send to db and vectors
-
+    update_count_sdskv_put(&num_send, &tot_send, global_threshold_send, (const) key, dsize);
     return ret;
 }
 
 int MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest,
               int tag, MPI_Comm comm, MPI_Request *request)
 {
-    // Much of this needs to be wrapped so the user
-    // just has to specify parameters like threshold values...
-    static const char* key_prefix = "MPI_Isend";
+    static const char* key_postfix = "MPI_Isend";
     static const hg_size_t dsize = sizeof(unsigned long);
-
-    int ret;
+    static char* key = NULL;
     int rank;
-    ret = PMPI_Isend(buf, count, datatype, dest, tag, comm, request);
-    num_isend++;
-    if (num_isend >= global_threshold_isend) {
-	PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
-	char* key = get_key(rank, key_prefix);
-	unsigned ksize = strlen(key);
-	tot_isend += num_isend;
-	sdskv_put_check_err( (const void*) key, ksize,
-			     (const void*) &tot_isend, dsize);
-	free(key);
-	num_isend = 0;
+    int ret;
+    if (key == NULL) {
+    	PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	key = get_key(rank, key_postfix);
     }
+    ret = PMPI_Isend(buf, count, datatype, dest, tag, comm, request);
+    update_count_sdskv_put(&num_isend, &tot_isend, global_threshold_isend, (const) key, dsize);
     return ret;
 }
 
 int MPI_Recv(void *buf, int count, MPI_Datatype datatype,
              int source, int tag, MPI_Comm comm, MPI_Status *status)
 {
-    // Much of this needs to be wrapped so the user
-    // just has to specify parameters like threshold values...
-    static const char* key_prefix = "MPI_Recv";
+    static const char* key_postfix = "MPI_Recv";
     static const hg_size_t dsize = sizeof(unsigned long);
+    static char* key = NULL;
     int ret;
     int rank;
-
-
-    ret = PMPI_Recv(buf, count, datatype, source, tag, comm, status);
-    num_recv++;
-    if (num_recv >= global_threshold_recv ) {
-	PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
-	char* key = get_key(rank, key_prefix);
-	unsigned ksize = strlen(key);
-	tot_recv += num_recv;
-	sdskv_put_check_err( (const void*) key, ksize,
-			     (const void*) &tot_recv, dsize);
-	free(key);
-	num_recv = 0;
+    if (key == NULL) {
+    	PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	key = get_key(rank, key_postfix);
     }
+    ret = PMPI_Recv(buf, count, datatype, source, tag, comm, status);
+    update_count_sdskv_put(&num_recv, &tot_recv, global_threshold_recv, (const) key, dsize);
     return ret;
 }
 

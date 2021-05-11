@@ -28,8 +28,17 @@
 //                             "0:MPI_Recv",
 //                             "1:MPI_Recv"
 //};
-static const char* keys[] = {"0:MPI_Isend",
-			     "1:MPI_Recv"};
+//static const char* keys[] = {"0:MPI_Isend",
+//			     "1:MPI_Recv"};
+
+static const char* keys[] = {
+    "0:MPI_Isend",
+    "1:MPI_Isend",
+    "0:MPI_Send", 
+    "1:MPI_Send",
+    "0:MPI_Recv", 
+    "1:MPI_Recv"
+};
 //static const unsigned num_keys = 4;
 
 int main(int argc, char *argv[])
@@ -159,9 +168,9 @@ int main(int argc, char *argv[])
     unsigned i;
     char* key;
     int exists = 0;
-    for (i=0; i < 2; i++) {
+    for (i=0; i < 6; i++) {
         key = keys[i];
-	printf("looking for key %s...\n", key);
+	printf("looking for key %s...", key);
     	ksize = strlen(key);
     	sdskv_exists(kvph, db_id,
     		     (const void*) key, ksize,
@@ -190,7 +199,7 @@ int main(int argc, char *argv[])
     	    printf("Key = %s, value = %lu, vsize = %lu\n", key,  *value, vsize);
     	    printf("\n");
     	} else {
-    	    printf("Key %s does not exist in DB\n", key);
+    	    printf("Key %s does not exist in DB\n\n", key);
     	}
     }
     free(value);

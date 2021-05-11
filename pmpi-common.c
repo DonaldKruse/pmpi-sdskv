@@ -23,9 +23,22 @@ hg_addr_t svr_addr;
 margo_instance_id mid;
 
 
-/* TODO these need to be a struct I think */
-//static unsigned int global_threshold_recv;
-//static unsigned int global_threshold_isend;
+void update_count_sdskv_put(unsigned *local_count, 
+			  unsigned *total_count,
+			  const unsigned threshold,
+			    const char* key,
+			    const hg_size_t dsize)
+{
+    (*local_count)++;
+    if ((*local_count) >= threshold) {
+	unsigned ksize = strlen(key);
+	*total_count += *local_count;
+	sdskv_put_check_err( (const void*) key, ksize,
+			     (const void*) total_count, dsize);
+	*local_count = 0;
+    }
+}
+
 
 
 void get_parameters()
@@ -45,6 +58,11 @@ void get_parameters()
     }
     if ((ret = fscanf(fi, "%u", &global_threshold_isend))  == EOF) {
 	printf("EOF found before scanning value for `global_threshold_isend`.");
+	printf(" Quitting...\n");
+	exit(1);
+    }
+    if ((ret = fscanf(fi, "%u", &global_threshold_send))  == EOF) {
+	printf("EOF found before scanning value for `global_threshold_send`.");
 	printf(" Quitting...\n");
 	exit(1);
     }
@@ -80,7 +98,7 @@ int sdskv_put_check_err(const void *key, hg_size_t ksize,
     int ret;
     int rank;
     PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    printf("Rank %d, putting kv: %s => %d\n", rank, (char*) key, *(int*) value);
+    //printf("Rank %d, putting kv: %s => %d\n", rank, (char*) key, *(int*) value);
     ret = sdskv_put(kvph, db_id,
                     (const void*) key, ksize,
                     (const void*) value, vsize);
@@ -130,33 +148,48 @@ int init_margo_open_db_check_error(int* argc, char*** argv) {
 
 
     int rank;
+    int world_size;
     MPI_Status status;
     PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
+    //PMPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    //if (rank == 0) {
+    //	;// create keys here
+    //}	
     // TODO - there really should broadcast a struct..
     // this will work for now, but obviously it won't scale well.
     /* Get threshold parameters */
-    if (rank == 0) {
-	get_parameters();
-    }
-    ret = PMPI_Bcast(&global_threshold_recv, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
-    if (ret != MPI_SUCCESS) {
-	printf("Could not broadcast global_threshold_recv! Quitting...\n");
-	PMPI_Finalize();
-	exit(1);
-    }
-    if (rank != 0)
-	printf("Rank %d got global_threshold_recv (%u)\n", rank, global_threshold_recv);
+    //if (rank == 0) {
+    //	get_parameters();
+    //}
+    //ret = PMPI_Bcast(&global_threshold_recv, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+    //if (ret != MPI_SUCCESS) {
+    //	printf("Could not broadcast global_threshold_recv! Quitting...\n");
+    //	PMPI_Finalize();
+    //	exit(1);
+    //}
+    //PMPI_Barrier(MPI_COMM_WORLD);
+    //if (rank != 0)
+    //	printf("Rank %d got global_threshold_recv (%u)\n", rank, global_threshold_recv);
 
-    ret = PMPI_Bcast(&global_threshold_isend, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
-    if (ret != MPI_SUCCESS) {
-	printf("Could not broadcast global_threshold_isend! Quitting...\n");
-	PMPI_Finalize();
-	exit(1);
-    }
-    if (rank != 0)
-	printf("Rank %d got global_threshold_isend (%u)\n", rank, global_threshold_recv);
-    PMPI_Barrier(MPI_COMM_WORLD);
+    //ret = PMPI_Bcast(&global_threshold_isend, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+    //if (ret != MPI_SUCCESS) {
+    //	printf("Could not broadcast global_threshold_isend! Quitting...\n");
+    //	PMPI_Finalize();
+    //	exit(1);
+    //}
+    //PMPI_Barrier(MPI_COMM_WORLD);
+    //if (rank != 0)
+    //	printf("Rank %d got global_threshold_isend (%u)\n", rank, global_threshold_recv);
+    //ret = PMPI_Bcast(&global_threshold_send, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+    //if (ret != MPI_SUCCESS) {
+    //	printf("Could not broadcast global_threshold_send! Quitting...\n");
+    //	PMPI_Finalize();
+    //	exit(1);
+    //}
+    //PMPI_Barrier(MPI_COMM_WORLD);
+    //if (rank != 0)
+    //	printf("Rank %d got global_threshold_send (%u)\n", rank, global_threshold_recv);
+    //PMPI_Barrier(MPI_COMM_WORLD);
 
 
     /* initialize Margo using the transport portion of the server
@@ -250,7 +283,7 @@ int init_margo_open_db_check_error(int* argc, char*** argv) {
         printf("Rank %d: db_id = %lu\n", rank, db_id);
         printf("Rank %d: sdskv_open return value was %d\n", rank, ret);
         printf("Rank %d: error message was: %s\n", rank, sdskv_error_messages[ret]);
-        printf("Rank %d will not doing anything about error...\n", rank);
+        printf("Rank %d: will not doing anything about error...\n", rank);
         //sdskv_provider_handle_release(kvph);
         //margo_addr_free(mid, svr_addr);
         //sdskv_client_finalize(kvcl);

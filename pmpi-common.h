@@ -27,14 +27,13 @@
 
 unsigned int global_threshold_recv;
 unsigned int global_threshold_isend;
+unsigned int global_threshold_send;
 
-
-typedef struct pmpi_counter_t {
-    int rank;
-    const char* key;
-    unsigned long count;
-    unsigned long threshold;
-} pmpi_counter;
+void update_count_sdskv_put(unsigned *local_count,
+			    unsigned *total_count,
+			    const unsigned threshold,
+			    const char* key,
+			    const hg_size_t dsize);
 
 
 void get_parameters();
