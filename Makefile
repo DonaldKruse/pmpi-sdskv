@@ -3,7 +3,7 @@ CC = mpicc
 FLAGS_PMPI = -Wall -g -shared 
 LIBS_PMPI = $(pkg-config --libs margo) 
 #-lmargo -lmercury -labt -lssg
-TARGETS=main-generate pmpi-lib.so main-get
+TARGETS=main-generate ping-pong pmpi-lib.so main-get
 OBJS_PMPI = pmpi-lib.o pmpi-common.o
 INCLUDE_PMPI = pmpi-common.h
 
@@ -28,6 +28,9 @@ main-get: main-get.c
 
 main-generate: main-generate.c
 	$(CC) -o $@ $(CFLAGS) main-generate.c $(LDLIBS)
+
+ping-pong: ping-pong.c
+	$(CC) -o $@ $(CFLAGS) ping-pong.c $(LDLIBS)
 
 # cannot run mpi on login node
 
