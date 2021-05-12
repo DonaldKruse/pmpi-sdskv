@@ -32,6 +32,8 @@ main-generate: main-generate.c
 ping-pong: ping-pong.c
 	$(CC) -o $@ $(CFLAGS) ping-pong.c $(LDLIBS)
 
+#ping-pong: mpi_pi_send.c
+#	$(CC) -o $@ $(CFLAGS) mpi_pi_send.c $(LDLIBS)
 # cannot run mpi on login node
 
 clean:

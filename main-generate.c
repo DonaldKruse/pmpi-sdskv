@@ -7,6 +7,7 @@ int main(int argc, char** argv) {
     int world_rank;
     int world_size;
     MPI_Request request;
+    double start, end, elapsed;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
@@ -43,9 +44,14 @@ int main(int argc, char** argv) {
         for (i = 0; i < 25; i++) {
             x = 2*i + 1;
 	    printf("Rank 0 sending %d to Rank 1\n", x);
+	    start = MPI_Wtime();
             MPI_Isend(&x, 1, MPI_INT,
                       1, 0,
                       MPI_COMM_WORLD, &request);
+	    end = MPI_Wtime();
+	    elapsed = end - start;
+	    printf("[%d]: Isend #%d took %lf seconds\n", world_rank, i, elapsed);
+	     
         }
         x =-1; // signal other rank to break out of loop
         MPI_Isend(&x, 1, MPI_INT,

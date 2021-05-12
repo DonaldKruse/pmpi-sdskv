@@ -28,7 +28,8 @@
 
     ### preload the pmpi shared file, run the main program
     ulimit -c unlimited
-    LD_PRELOAD=./pmpi-lib.so lrun -N 2 -T 1 --core_cpu=lwcore ./main-generate $(<input.txt)
+    echo "running ping-pong"
+    LD_PRELOAD=./pmpi-lib.so lrun -N 4 -T 1 ./ping-pong $(<input.txt)
     
     sleep 2
     echo "running main"

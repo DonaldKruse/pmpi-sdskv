@@ -107,7 +107,6 @@ int MPI_Init(int *argc, char ***argv)
     int rank;
     int world_size;
 
-
     if(*argc != 5)
     {
         fprintf(stderr, "MPI_Init: Usage: %s <sdskv_server_addr> <mplex_id> <db_name> <num_keys>\n",
@@ -115,7 +114,7 @@ int MPI_Init(int *argc, char ***argv)
         fprintf(stderr, "  Example: %s tcp://localhost:1234 1 foo 1000\n", (*argv)[0]);
         return(-1);
     }
-    
+
     /**
      * Eventually this file open stuff needs to move somewhere else or be wrapped.
      * See get_params() in pmpi-common.c.
