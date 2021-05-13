@@ -20,6 +20,9 @@ int MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest,
 int MPI_Recv(void *buf, int count, MPI_Datatype datatype,
              int source, int tag, MPI_Comm comm, MPI_Status *status);
 
+int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+	       MPI_Op op, int root, MPI_Comm comm);
+
 int MPI_Finalize();
 
 

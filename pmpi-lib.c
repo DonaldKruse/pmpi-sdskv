@@ -38,27 +38,31 @@
 static const char* key_postfix[] = {
     "MPI_Isend",
     "MPI_Send",
-    "MPI_Recv"
-};
-static const unsigned total_keys = 3;
+    "MPI_Recv",
+    "MPI_Reduce"
+}; // don't forget to update total_keys!
+static const unsigned total_keys = 4;
 
 
 /**
  * These are the counters used to determine the frequencey of puts into
  * the database
  */
-static unsigned long num_recv = 0;
-static unsigned long tot_recv = 0;
+static unsigned  num_recv = 0;
+static unsigned  tot_recv = 0;
 unsigned int global_threshold_recv;
 
-static unsigned long num_isend = 0;
-static unsigned long tot_isend = 0;
+static unsigned  num_isend = 0;
+static unsigned  tot_isend = 0;
 unsigned int global_threshold_isend;
 
-static unsigned long num_send = 0;
-static unsigned long tot_send = 0;
+static unsigned  num_send = 0;
+static unsigned  tot_send = 0;
 unsigned int global_threshold_send;
 
+static unsigned  num_reduce = 0;
+static unsigned  tot_reduce = 0;
+unsigned int global_threshold_reduce;
 
 char* get_key(int rank, const char* postfix) {
     // we need to get the number of characters for the key.
@@ -102,7 +106,6 @@ int MPI_Init(int *argc, char ***argv)
 {
     int mpi_init_ret;
     int ssg_ret;
-    const char* filename = "pmpi-params.txt";
     int ret;
     int rank;
     int world_size;
@@ -142,6 +145,7 @@ int MPI_Init(int *argc, char ***argv)
 		key = get_key(r, key_postfix[postfix]); 
 		fputs(key, fp);
 		fputs("\n", fp);
+		//printf("key generated was '%s'\n", key);
 		free(key);
 	    }
 	}
@@ -204,7 +208,7 @@ int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest,
 	key = get_key(rank, key_postfix);
     }
     ret = PMPI_Send(buf, count, datatype, dest, tag, comm);
-    update_count_sdskv_put(&num_send, &tot_send, global_threshold_send, (const) key, dsize);
+    update_count_sdskv_put(&num_send, &tot_send, global_threshold_send, (const char*) key, dsize);
     return ret;
 }
 
@@ -221,7 +225,7 @@ int MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest,
 	key = get_key(rank, key_postfix);
     }
     ret = PMPI_Isend(buf, count, datatype, dest, tag, comm, request);
-    update_count_sdskv_put(&num_isend, &tot_isend, global_threshold_isend, (const) key, dsize);
+    update_count_sdskv_put(&num_isend, &tot_isend, global_threshold_isend, (const char*) key, dsize);
     return ret;
 }
 
@@ -238,40 +242,30 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype,
 	key = get_key(rank, key_postfix);
     }
     ret = PMPI_Recv(buf, count, datatype, source, tag, comm, status);
-    update_count_sdskv_put(&num_recv, &tot_recv, global_threshold_recv, (const) key, dsize);
+    update_count_sdskv_put(&num_recv, &tot_recv, global_threshold_recv, (const char*) key, dsize);
+    return ret;
+}
+
+int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+	       MPI_Op op, int root, MPI_Comm comm)
+{
+    static const char* key_postfix = "MPI_Reduce";
+    static const hg_size_t dsize = sizeof(unsigned long);
+    static char* key = NULL;
+    int ret;
+    static int rank;
+    if (key == NULL) {
+    	PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	key = get_key(rank, key_postfix);
+    }
+    ret = PMPI_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm);
+    update_count_sdskv_put(&num_reduce, &tot_reduce, global_threshold_reduce, (const char*) key, dsize);
     return ret;
 }
 
 int MPI_Finalize()
 {
-    int pmpi_finalize_ret = 0;
-
-    int rank;
-    PMPI_Barrier(MPI_COMM_WORLD);
-    PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-
-    // This block should eventually be removed and each
-    // MPI routine should have its own sdskv_put_check_err
-    //unsigned int data[num_keys] = {num_init, num_send, num_isend, num_recv, num_finalize};
-    //unsigned long data[total_keys] = {num_init, num_send, num_isend, num_recv, num_finalize};
- 										   
-    unsigned i;
-    unsigned ksize = 0;
-    unsigned dsize = 0;
-    //for (i = 0; i < total_keys; i++) {
-    //    ksize = sizeof(char)*strlen(keys[i]);
-    //    dsize = sizeof(unsigned long);
-    //	unsigned long global_data = 0;
-    //	PMPI_Reduce(&(data[i]), &global_data, 1, MPI_UNSIGNED_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
-    //	if (rank == 0) {
-    //	    printf("Rank %d: global_data is %lu for key %s\n", 0, global_data, keys[i]);
-    //	    sdskv_put_check_err( (const void*) keys[i], ksize,
-    //	    			 (const void*) &global_data, dsize);
-    //	}
-    //	PMPI_Barrier(MPI_COMM_WORLD);
-    //}
-
-    pmpi_finalize_ret = PMPI_Finalize();
-    return pmpi_finalize_ret;
+    int ret;
+    ret = PMPI_Finalize();
+    return ret;
 }

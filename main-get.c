@@ -11,35 +11,9 @@
 #include <margo.h>
 
 #include "sdskv-client.h"
-//#include <sdskv-client.h>
 #include "sdskv-common.h"
 
-
-//const unsigned num_keys = 5;
-//static const char* keys[] = {"MPI_Init", 
-//			     "MPI_Send", 
-//			     "MPI_Isend",
-//			     "MPI_Recv",
-//                             "MPI_Finalize"};
-
-//static const char* keys[] = {
-//                             "0:MPI_Isend",
-//                             "1:MPI_Isend",
-//                             "0:MPI_Recv",
-//                             "1:MPI_Recv"
-//};
-//static const char* keys[] = {"0:MPI_Isend",
-//			     "1:MPI_Recv"};
-
-static const char* keys[] = {
-    "0:MPI_Isend",
-    "1:MPI_Isend",
-    "0:MPI_Send", 
-    "1:MPI_Send",
-    "0:MPI_Recv", 
-    "1:MPI_Recv"
-};
-//static const unsigned num_keys = 4;
+#include "pmpi-common.h"
 
 int main(int argc, char *argv[])
 {
@@ -54,6 +28,7 @@ int main(int argc, char *argv[])
     sdskv_provider_handle_t kvph;
     hg_return_t hret;
     int ret;
+    
 
     if(argc != 5)
     {
@@ -111,13 +86,13 @@ int main(int argc, char *argv[])
 
     /* open the database */
     printf("\n\n\n");
-    printf("Getting key-value pairs from database\n");
+    printf("main-get: Getting key-value pairs from database\n");
     sdskv_database_id_t db_id;
-    printf("kvph is %u\n", kvph);
-    printf("db_name is %s\n", db_name);
+    printf("main-get: kvph is %u\n", (unsigned) kvph);
+    printf("main-get: db_name is %s\n", db_name);
     ret = sdskv_open(kvph, db_name, &db_id);
     if(ret == 0) {
-        printf("Successfuly opened database %s, id is %ld\n", db_name, db_id);
+        printf("main-get: Successfuly opened database %s, id is %ld\n", db_name, db_id);
     } else {
         fprintf(stderr, "Error: could not open database %s\n", db_name);
         sdskv_provider_handle_release(kvph);
@@ -132,15 +107,13 @@ int main(int argc, char *argv[])
     char* key1 = "test";
     unsigned ksize = strlen(key1);
 
-    int value1 = 1;
-    int value2 = 2;
 
     unsigned long * value = malloc(sizeof(unsigned long));
     unsigned vsize = sizeof(unsigned long);
     unsigned long vsizeget = sizeof(unsigned long);
 
-
-
+    //int value1 = 1;
+    //int value2 = 2;
     //ret = sdskv_put(kvph, db_id,
     //                (const void*) key1, ksize,
     //                (const void*) &value1, vsize);
@@ -150,7 +123,7 @@ int main(int argc, char *argv[])
     //		    (const void *) key1, ksize,
     //		    (void *) value, &vsizeget);
 
-    //printf("kv-pair: %s => %d\n", key1, *(int*) value);
+    //printf("main-get: kv-pair: %s => %d\n", key1, *(int*) value);
 
 
     //ret = sdskv_put(kvph, db_id,
@@ -161,33 +134,44 @@ int main(int argc, char *argv[])
     //		    (const void *) key1, ksize,
     //		    (void *) value, &vsizeget);
 
-    //printf("kv-pair: %s => %d\n", key1, *(int*) value);
-
+    //printf("main-get: kv-pair: %s => %d\n", key1, *(int*) value);
+   
 
     printf("\n\n\n\n======== getting kv-pairs from DB ========\n\n\n\n");
     unsigned i;
+    char* filename = "keys.txt";
+    char** keylist; 
+    unsigned numkeys = 0;
+    get_keys_from_file(filename, &keylist, &numkeys);
+    printf("main-get: numkeys = %u\n", numkeys);
+    for (i = 0; i < numkeys; i++) {
+	printf("main-get: key[%u] is '%s'\n", i, keylist[i]);
+    }
+    printf("\n\n\n\n");
+
     char* key;
     int exists = 0;
-    for (i=0; i < 6; i++) {
-        key = keys[i];
-	printf("looking for key %s...", key);
+    for (i=0; i < numkeys; i++) {
+        key = keylist[i];
+	
+	printf("main-get: looking for key '%s'...", key);
     	ksize = strlen(key);
     	sdskv_exists(kvph, db_id,
     		     (const void*) key, ksize,
     		     &exists);
 
     	if (exists) {
-	    printf("Key %s exists!\n", key);
+	    printf("main-get: Exists!\n");
     	    ret = sdskv_get(kvph, db_id,
 			    (const void *) key, ksize,
 			    (void *) value, &vsizeget);
     	    if(ret != 0) {
     		fprintf(stderr, "Error: sdskv_get() failed (key was %s)\n", key);
     		if (SDSKV_ERROR_IS_HG(ret)) {
-    		    printf("ERROR IS HG\n");
+    		    printf("main-get: ERROR IS HG\n");
     		}
     		if (SDSKV_ERROR_IS_ABT(ret)) {
-    		    printf("ERROR IS ABT\n");
+    		    printf("main-get: ERROR IS ABT\n");
     		}
     		sdskv_shutdown_service(kvcl, svr_addr);
     		sdskv_provider_handle_release(kvph);
@@ -196,44 +180,17 @@ int main(int argc, char *argv[])
     		margo_finalize(mid);
     		return -1;
     	    }
-    	    printf("Key = %s, value = %lu, vsize = %lu\n", key,  *value, vsize);
+    	    printf("main-get: Key = %s, value = %lu, vsize = %u\n", key,  *value, vsize);
     	    printf("\n");
     	} else {
-    	    printf("Key %s does not exist in DB\n\n", key);
+    	    printf("Does Not Exist!\n\n");
     	}
     }
     free(value);
+    free_keylist(&keylist, numkeys);
     printf("\n\n\n\n========= Done getting kv-pairs =========\n\n\n\n");
 
-    //for(unsigned i=0; i < num_keys; i++) {
-    //    auto k = keys[rand() % keys.size()];
-    //    size_t value_size = max_value_size;
-    //    std::vector<char> v(max_value_size);
-    //    ret = sdskv_get(kvph, db_id,
-    //            (const void *)k.data(), k.size(),
-    //            (void *)v.data(), &value_size);
-    //    if(ret != 0) {
-    //        fprintf(stderr, "Error: sdskv_get() failed (key was %s)\n", k.c_str());
-    //        sdskv_shutdown_service(kvcl, svr_addr);
-    //        sdskv_provider_handle_release(kvph);
-    //        margo_addr_free(mid, svr_addr);
-    //        sdskv_client_finalize(kvcl);
-    //        margo_finalize(mid);
-    //        return -1;
-    //    }
-    //    std::string vstring((char*)(v.data()));
-    //    std::cout << "Got " << k << " ===> " << vstring << std::endl;
-    //    if(vstring != reference[k]) {
-    //        fprintf(stderr, "Error: sdskv_get() returned a value different from the reference\n");
-    //        sdskv_shutdown_service(kvcl, svr_addr);
-    //        sdskv_provider_handle_release(kvph);
-    //        margo_addr_free(mid, svr_addr);
-    //        sdskv_client_finalize(kvcl);
-    //        margo_finalize(mid);
-    //        return -1;
-    //    }
-    //}
-
+    printf("main-get: Shutting down server and cleaning up...");
     /* shutdown the server */
     ret = sdskv_shutdown_service(kvcl, svr_addr);
 
@@ -242,6 +199,7 @@ int main(int argc, char *argv[])
     margo_addr_free(mid, svr_addr);
     sdskv_client_finalize(kvcl);
     margo_finalize(mid);
+    printf("done.\n");
     return(ret);
 }
 

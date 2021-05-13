@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <mpi.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <ssg.h>
@@ -22,6 +23,39 @@ sdskv_client_t kvcl;
 hg_addr_t svr_addr;
 margo_instance_id mid;
 
+void get_keys_from_file(const char* filename, char*** keylist, unsigned* numkeys)
+{
+    int i;
+    int buffsize = 64;
+    char buffer[buffsize];
+    FILE* fp = fopen(filename, "r");
+    if (fp == NULL) {
+	(*keylist) = NULL;
+	return;
+    }
+    
+    while( (fgets(buffer, buffsize, fp)) != NULL) {
+	(*numkeys)++;
+    }
+    (*numkeys)--; // we overcounted by 1
+
+    (*keylist) = (char**) malloc((*numkeys)*sizeof(char*));
+    rewind(fp);
+    for (i = 0; i < (*numkeys); i++) {
+	(*keylist)[i] = (char*) malloc(buffsize*sizeof(char));
+	fscanf(fp, "%s[^\n]", (*keylist)[i]);
+    }
+    fclose(fp);
+}
+
+void free_keylist(char*** keylist, unsigned numkeys) {
+    int i;
+    for (i = 0; i < numkeys; i++) {
+	free((*keylist)[i]);
+	(*keylist)[i] = NULL;
+    }
+    (*keylist) = NULL;
+}
 
 void update_count_sdskv_put(unsigned *local_count, 
 			  unsigned *total_count,
@@ -66,6 +100,12 @@ void get_parameters()
 	printf(" Quitting...\n");
 	exit(1);
     }
+    if ((ret = fscanf(fi, "%u", &global_threshold_reduce))  == EOF) {
+	printf("EOF found before scanning value for `global_threshold_reduce`.");
+	printf(" Quitting...\n");
+	exit(1);
+    }
+
     fclose(fi);
 }
 
@@ -139,57 +179,15 @@ int init_margo_open_db_check_error(int* argc, char*** argv) {
     uint8_t mplex_id;
     uint32_t num_keys;
     hg_return_t hret;
+    int rank;
+    
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	
     sdskv_svr_addr_str = (*argv)[1];
     printf("the server address is %s\n", sdskv_svr_addr_str);
     mplex_id          = atoi((*argv)[2]);
     db_name           = (*argv)[3];
     num_keys          = atoi((*argv)[4]);
-
-
-    int rank;
-    int world_size;
-    MPI_Status status;
-    PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    //PMPI_Comm_size(MPI_COMM_WORLD, &world_size);
-    //if (rank == 0) {
-    //	;// create keys here
-    //}	
-    // TODO - there really should broadcast a struct..
-    // this will work for now, but obviously it won't scale well.
-    /* Get threshold parameters */
-    //if (rank == 0) {
-    //	get_parameters();
-    //}
-    //ret = PMPI_Bcast(&global_threshold_recv, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
-    //if (ret != MPI_SUCCESS) {
-    //	printf("Could not broadcast global_threshold_recv! Quitting...\n");
-    //	PMPI_Finalize();
-    //	exit(1);
-    //}
-    //PMPI_Barrier(MPI_COMM_WORLD);
-    //if (rank != 0)
-    //	printf("Rank %d got global_threshold_recv (%u)\n", rank, global_threshold_recv);
-
-    //ret = PMPI_Bcast(&global_threshold_isend, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
-    //if (ret != MPI_SUCCESS) {
-    //	printf("Could not broadcast global_threshold_isend! Quitting...\n");
-    //	PMPI_Finalize();
-    //	exit(1);
-    //}
-    //PMPI_Barrier(MPI_COMM_WORLD);
-    //if (rank != 0)
-    //	printf("Rank %d got global_threshold_isend (%u)\n", rank, global_threshold_recv);
-    //ret = PMPI_Bcast(&global_threshold_send, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
-    //if (ret != MPI_SUCCESS) {
-    //	printf("Could not broadcast global_threshold_send! Quitting...\n");
-    //	PMPI_Finalize();
-    //	exit(1);
-    //}
-    //PMPI_Barrier(MPI_COMM_WORLD);
-    //if (rank != 0)
-    //	printf("Rank %d got global_threshold_send (%u)\n", rank, global_threshold_recv);
-    //PMPI_Barrier(MPI_COMM_WORLD);
 
 
     /* initialize Margo using the transport portion of the server
@@ -212,7 +210,6 @@ int init_margo_open_db_check_error(int* argc, char*** argv) {
         printf("Rank %d, margo_init() success\n", rank);
     }
     PMPI_Barrier(MPI_COMM_WORLD);
-
 
 
 

@@ -15,10 +15,10 @@ int main(int argc, char** argv) {
 
     // Check to make sure we have enough ranks
     if (world_size != 2) {
-        printf("World size must be 2. Quitting...\n");
+        printf("main-generate: World size must be 2. Quitting...\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
     } else {
-        printf("World size is 2!\n");
+        printf("main-generate: World size is 2!\n");
     }
 
     int x;
@@ -30,10 +30,10 @@ int main(int argc, char** argv) {
             MPI_Recv(&x, 1, MPI_INT,
                       0, 0,
                       MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            printf("Rank 1 recieved number %d from process 0\n", x);
+            //printf("main-generate: Rank 1 recieved number %d from process 0\n", x);
 
             if (x == -1){
-                printf("Rank 1 recieved -1. Breaking...\n");
+                //printf("main-generate: Rank 1 recieved -1. Breaking...\n");
                 break;
             }
         }
@@ -43,14 +43,14 @@ int main(int argc, char** argv) {
         int i;
         for (i = 0; i < 25; i++) {
             x = 2*i + 1;
-	    printf("Rank 0 sending %d to Rank 1\n", x);
+	    //printf("main-generate: Rank 0 sending %d to Rank 1\n", x);
 	    start = MPI_Wtime();
             MPI_Isend(&x, 1, MPI_INT,
                       1, 0,
                       MPI_COMM_WORLD, &request);
 	    end = MPI_Wtime();
 	    elapsed = end - start;
-	    printf("[%d]: Isend #%d took %lf seconds\n", world_rank, i, elapsed);
+	    printf("main-generate [%d]: Isend #%d took %lf seconds\n", world_rank, i, elapsed);
 	     
         }
         x =-1; // signal other rank to break out of loop

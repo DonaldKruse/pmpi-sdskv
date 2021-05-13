@@ -18,16 +18,15 @@
 #include "../include/sdskv-common.h"
 
 
-//static const char* keys[] = {"MPI_Init",
-//                             "MPI_Send",
-//                             "MPI_Isend",
-//                             "MPI_Recv",
-//                             "MPI_Finalize"};
-//static const unsigned total_keys = 5;
-
 unsigned int global_threshold_recv;
 unsigned int global_threshold_isend;
 unsigned int global_threshold_send;
+unsigned int global_threshold_reduce;
+
+
+void get_keys_from_file(const char* filename, char*** keylist, unsigned* numkeys);
+
+void free_keylist(char*** keylist, unsigned numkeys);
 
 void update_count_sdskv_put(unsigned *local_count,
 			    unsigned *total_count,
