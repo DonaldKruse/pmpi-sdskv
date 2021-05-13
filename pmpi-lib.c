@@ -162,7 +162,7 @@ int MPI_Init(int *argc, char ***argv)
 	exit(1);
     }
     if (rank != 0)
-	printf("Rank %d got global_threshold_recv (%u)\n", rank, global_threshold_recv);
+	printf("Rank %d got global_threshold_recv = %u\n", rank, global_threshold_recv);
 
     ret = PMPI_Bcast(&global_threshold_isend, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
     if (ret != MPI_SUCCESS) {
@@ -171,7 +171,7 @@ int MPI_Init(int *argc, char ***argv)
 	exit(1);
     }
     if (rank != 0)
-	printf("Rank %d got global_threshold_isend (%u)\n", rank, global_threshold_recv);
+	printf("Rank %d got global_threshold_isend = %u\n", rank, global_threshold_recv);
     ret = PMPI_Bcast(&global_threshold_send, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
     if (ret != MPI_SUCCESS) {
 	printf("Could not broadcast global_threshold_send! Quitting...\n");
@@ -179,8 +179,9 @@ int MPI_Init(int *argc, char ***argv)
 	exit(1);
     }
     if (rank != 0)
-	printf("Rank %d got global_threshold_send (%u)\n", rank, global_threshold_recv);
+	printf("Rank %d got global_threshold_send = %u\n", rank, global_threshold_recv);
 
+    printf("----------------\n\n\n\n");
     PMPI_Barrier(MPI_COMM_WORLD);
     init_margo_open_db_check_error(argc, argv);
 
@@ -196,7 +197,7 @@ int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest,
     static const char* key_postfix = "MPI_Send";
     static const hg_size_t dsize = sizeof(unsigned long);
     static char* key = NULL;
-    int rank;
+    static int rank;
     int ret;
     if (key == NULL) {
     	PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -213,7 +214,7 @@ int MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest,
     static const char* key_postfix = "MPI_Isend";
     static const hg_size_t dsize = sizeof(unsigned long);
     static char* key = NULL;
-    int rank;
+    static int rank;
     int ret;
     if (key == NULL) {
     	PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -231,7 +232,7 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype,
     static const hg_size_t dsize = sizeof(unsigned long);
     static char* key = NULL;
     int ret;
-    int rank;
+    static int rank;
     if (key == NULL) {
     	PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	key = get_key(rank, key_postfix);

@@ -3,7 +3,7 @@ CC = mpicc
 FLAGS_PMPI = -Wall -g -shared 
 LIBS_PMPI = $(pkg-config --libs margo) 
 #-lmargo -lmercury -labt -lssg
-TARGETS=main-generate ping-pong pmpi-lib.so main-get
+TARGETS= iter-send-recv main-generate ping-pong pmpi-lib.so main-get
 OBJS_PMPI = pmpi-lib.o pmpi-common.o
 INCLUDE_PMPI = pmpi-common.h
 
@@ -32,9 +32,9 @@ main-generate: main-generate.c
 ping-pong: ping-pong.c
 	$(CC) -o $@ $(CFLAGS) ping-pong.c $(LDLIBS)
 
-#ping-pong: mpi_pi_send.c
-#	$(CC) -o $@ $(CFLAGS) mpi_pi_send.c $(LDLIBS)
-# cannot run mpi on login node
+iter-send-recv: iter-send-recv.c
+	$(CC) -o $@ $(CFLAGS) iter-send-recv.c $(LDLIBS)
+
 
 clean:
 	rm -f *~ *.o $(TARGETS)

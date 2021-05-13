@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
     //}
 
     /* shutdown the server */
-    //ret = sdskv_shutdown_service(kvcl, svr_addr);
+    ret = sdskv_shutdown_service(kvcl, svr_addr);
 
     /**** cleanup ****/
     sdskv_provider_handle_release(kvph);
