@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
                       MPI_COMM_WORLD, &request);
 	    end = MPI_Wtime();
 	    elapsed = end - start;
-	    printf("main-generate [%d]: Isend #%d took %lf seconds\n", world_rank, i, elapsed);
+	    printf("main-generate [%d]: Isend #%d took %.10e seconds\n", world_rank, i, elapsed);
 	     
         }
         x =-1; // signal other rank to break out of loop

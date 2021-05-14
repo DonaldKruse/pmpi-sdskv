@@ -183,7 +183,7 @@ int init_margo_open_db_check_error(int* argc, char*** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	
     sdskv_svr_addr_str = (*argv)[1];
-    printf("the server address is %s\n", sdskv_svr_addr_str);
+    //printf("the server address is %s\n", sdskv_svr_addr_str);
     mplex_id          = atoi((*argv)[2]);
     db_name           = (*argv)[3];
     num_keys          = atoi((*argv)[4]);
@@ -206,7 +206,7 @@ int init_margo_open_db_check_error(int* argc, char*** argv) {
         printf("Rank %d, Error: margo_init()\n", rank);
         return(-1);
     } else {
-        printf("Rank %d, margo_init() success\n", rank);
+        //printf("Rank %d, margo_init() success\n", rank);
     }
     PMPI_Barrier(MPI_COMM_WORLD);
 
@@ -238,7 +238,7 @@ int init_margo_open_db_check_error(int* argc, char*** argv) {
         margo_finalize(mid);
         return -1;
     } else {
-        printf("Rank %d: sdskv_client_init() success\n", rank);
+        //printf("Rank %d: sdskv_client_init() success\n", rank);
     }
     PMPI_Barrier(MPI_COMM_WORLD);
 
@@ -251,7 +251,7 @@ int init_margo_open_db_check_error(int* argc, char*** argv) {
         margo_finalize(mid);
         return(-1);
     } else {
-        printf("Rank %d: margo_addr_lookup() success\n", rank);
+        //printf("Rank %d: margo_addr_lookup() success\n", rank);
     }
     PMPI_Barrier(MPI_COMM_WORLD);
 
@@ -265,15 +265,15 @@ int init_margo_open_db_check_error(int* argc, char*** argv) {
         margo_finalize(mid);
         return(-1);
     } else {
-        printf("Rank %d: sdskv_provider_handle_create() success\n", rank);
+        //printf("Rank %d: sdskv_provider_handle_create() success\n", rank);
     }
     PMPI_Barrier(MPI_COMM_WORLD);
 
     /* open the database */
     ret = sdskv_open(kvph, db_name, &db_id);
     if(ret == 0) {
-        printf("Rank %d: Successfully opened database %s, id is %ld\n", rank, db_name, db_id);
-        printf("Rank %d: db_id = %lu\n", rank, db_id);
+        //printf("Rank %d: Successfully opened database %s, id is %ld\n", rank, db_name, db_id);
+        //printf("Rank %d: db_id = %lu\n", rank, db_id);
     } else {
         printf("Rank %d: Error: could not open database %s\n", rank, db_name);
         printf("Rank %d: db_id = %lu\n", rank, db_id);

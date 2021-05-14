@@ -159,6 +159,7 @@ int MPI_Init(int *argc, char ***argv)
     if (rank == 0) {
 	get_parameters();
     }
+
     ret = PMPI_Bcast(&global_threshold_recv, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
     if (ret != MPI_SUCCESS) {
 	printf("Could not broadcast global_threshold_recv! Quitting...\n");
@@ -176,6 +177,7 @@ int MPI_Init(int *argc, char ***argv)
     }
     if (rank != 0)
 	printf("Rank %d got global_threshold_isend = %u\n", rank, global_threshold_recv);
+
     ret = PMPI_Bcast(&global_threshold_send, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
     if (ret != MPI_SUCCESS) {
 	printf("Could not broadcast global_threshold_send! Quitting...\n");
@@ -184,6 +186,24 @@ int MPI_Init(int *argc, char ***argv)
     }
     if (rank != 0)
 	printf("Rank %d got global_threshold_send = %u\n", rank, global_threshold_recv);
+
+    ret = PMPI_Bcast(&global_threshold_send, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+    if (ret != MPI_SUCCESS) {
+	printf("Could not broadcast global_threshold_send! Quitting...\n");
+	PMPI_Finalize();
+	exit(1);
+    }
+    if (rank != 0)
+	printf("Rank %d got global_threshold_send = %u\n", rank, global_threshold_recv);
+
+    ret = PMPI_Bcast(&global_threshold_reduce, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+    if (ret != MPI_SUCCESS) {
+	printf("Could not broadcast global_threshold_reduce! Quitting...\n");
+	PMPI_Finalize();
+	exit(1);
+    }
+    if (rank != 0)
+	printf("Rank %d got global_threshold_reduce = %u\n", rank, global_threshold_recv);
 
     printf("----------------\n\n\n\n");
     PMPI_Barrier(MPI_COMM_WORLD);
