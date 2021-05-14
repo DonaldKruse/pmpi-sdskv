@@ -134,7 +134,7 @@ int MPI_Init(int *argc, char ***argv)
 	int r;
 	char* key = NULL;
 	
-	FILE* fp = fopen("keys.txt", "w+");
+	FILE* fp = fopen("keys.txt", "w");
 	if (fp == NULL) {
 	    printf("Could not open 'keys.txt'. Quitting...\n");
 	    exit(1);
