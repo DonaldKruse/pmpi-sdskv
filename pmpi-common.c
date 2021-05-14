@@ -37,7 +37,6 @@ void get_keys_from_file(const char* filename, char*** keylist, unsigned* numkeys
     while( (fgets(buffer, buffsize, fp)) != NULL) {
 	(*numkeys)++;
     }
-    (*numkeys)--; // we overcounted by 1
 
     (*keylist) = (char**) malloc((*numkeys)*sizeof(char*));
     rewind(fp);
