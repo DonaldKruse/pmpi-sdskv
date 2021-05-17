@@ -116,7 +116,6 @@ do
     mv $filename timings/mpi_pi_send
 
 done
- run without pmpi
 cat serveraddr.txt > input.txt
 cat otherargs.txt >> input.txt
 echo -n " mpi-pi-send-times-no-pmpi.txt" >> input.txt
