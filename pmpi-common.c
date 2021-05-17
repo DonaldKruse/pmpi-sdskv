@@ -63,12 +63,14 @@ void update_count_sdskv_put(unsigned *local_count,
 			    const hg_size_t dsize)
 {
     (*local_count)++;
+    //printf("local count is %u\n", *local_count);
     if ((*local_count) >= threshold) {
 	unsigned ksize = strlen(key);
-	*total_count += *local_count;
+	(*total_count) += (*local_count);
+	//printf("total count is %u\n", *total_count);
 	sdskv_put_check_err( (const void*) key, ksize,
 			     (const void*) total_count, dsize);
-	*local_count = 0;
+	(*local_count) = 0;
     }
 }
 

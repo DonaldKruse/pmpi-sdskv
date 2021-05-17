@@ -1,0 +1,16 @@
+mpi_pi_reduce [2]: reduce N: 10
+mpi_pi_reduce [2]: reduce totaltime: 9.9511500000e-04
+mpi_pi_reduce [2]: reduce avg: 0.0000000000e+00
+mpi_pi_reduce [2]: reduce std-dev: 1.0132076328e-04
+mpi_pi_reduce [3]: reduce N: 10
+mpi_pi_reduce [3]: reduce totaltime: 8.2569600000e-04
+mpi_pi_reduce [3]: reduce avg: 0.0000000000e+00
+mpi_pi_reduce [3]: reduce std-dev: 8.7284482695e-05
+mpi_pi_reduce [0]: reduce N: 10
+mpi_pi_reduce [0]: reduce totaltime: 1.4540270000e-03
+mpi_pi_reduce [0]: reduce avg: 1.4540270000e-04
+mpi_pi_reduce [0]: reduce std-dev: 7.1156417025e-05
+mpi_pi_reduce [1]: reduce N: 10
+mpi_pi_reduce [1]: reduce totaltime: 1.0373260000e-03
+mpi_pi_reduce [1]: reduce avg: 0.0000000000e+00
+mpi_pi_reduce [1]: reduce std-dev: 1.1078346623e-04

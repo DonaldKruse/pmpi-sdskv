@@ -1,0 +1,16 @@
+mpi_pi_send [2]: send N: 100
+mpi_pi_send [2]: send totaltime: 6.7809000000e-04
+mpi_pi_send [2]: send avg: 6.7809000000e-06
+mpi_pi_send [2]: send std-dev: 2.3911153970e-05
+mpi_pi_send [3]: send N: 100
+mpi_pi_send [3]: send totaltime: 5.4890600000e-04
+mpi_pi_send [3]: send avg: 5.4890600000e-06
+mpi_pi_send [3]: send std-dev: 1.8971378963e-05
+mpi_pi_recv [0]: recv N: 100
+mpi_pi_recv [0]: recv totaltime: 2.0990060000e-03
+mpi_pi_recv [0]: recv avg: 2.0990060000e-05
+mpi_pi_recv [0]: recv std-dev: 2.7632853483e-05
+mpi_pi_send [1]: send N: 100
+mpi_pi_send [1]: send totaltime: 6.7399600000e-04
+mpi_pi_send [1]: send avg: 6.7399600000e-06
+mpi_pi_send [1]: send std-dev: 2.3757556866e-05

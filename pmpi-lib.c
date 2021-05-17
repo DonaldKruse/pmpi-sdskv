@@ -166,8 +166,8 @@ int MPI_Init(int *argc, char ***argv)
 	PMPI_Finalize();
 	exit(1);
     }
-    if (rank != 0)
-	printf("pmpi-lib: Rank %d got global_threshold_recv = %u\n", rank, global_threshold_recv);
+    //if (rank != 0)
+	//printf("pmpi-lib: Rank %d got global_threshold_recv = %u\n", rank, global_threshold_recv);
 
     ret = PMPI_Bcast(&global_threshold_isend, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
     if (ret != MPI_SUCCESS) {
@@ -175,8 +175,8 @@ int MPI_Init(int *argc, char ***argv)
 	PMPI_Finalize();
 	exit(1);
     }
-    if (rank != 0)
-	printf("pmpi-lib: Rank %d got global_threshold_isend = %u\n", rank, global_threshold_recv);
+    //if (rank != 0)
+	//printf("pmpi-lib: Rank %d got global_threshold_isend = %u\n", rank, global_threshold_recv);
 
     ret = PMPI_Bcast(&global_threshold_send, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
     if (ret != MPI_SUCCESS) {
@@ -184,8 +184,8 @@ int MPI_Init(int *argc, char ***argv)
 	PMPI_Finalize();
 	exit(1);
     }
-    if (rank != 0)
-	printf("pmpi-lib: Rank %d got global_threshold_send = %u\n", rank, global_threshold_recv);
+    //if (rank != 0)
+	//printf("pmpi-lib: Rank %d got global_threshold_send = %u\n", rank, global_threshold_recv);
 
     ret = PMPI_Bcast(&global_threshold_send, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
     if (ret != MPI_SUCCESS) {
@@ -193,8 +193,8 @@ int MPI_Init(int *argc, char ***argv)
 	PMPI_Finalize();
 	exit(1);
     }
-    if (rank != 0)
-	printf("pmpi-lib: Rank %d got global_threshold_send = %u\n", rank, global_threshold_recv);
+    //if (rank != 0)
+	//printf("pmpi-lib: Rank %d got global_threshold_send = %u\n", rank, global_threshold_recv);
 
     ret = PMPI_Bcast(&global_threshold_reduce, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
     if (ret != MPI_SUCCESS) {
@@ -202,10 +202,10 @@ int MPI_Init(int *argc, char ***argv)
 	PMPI_Finalize();
 	exit(1);
     }
-    if (rank != 0)
-	printf("pmpi-lib: Rank %d got global_threshold_reduce = %u\n", rank, global_threshold_recv);
+    //if (rank != 0)
+	//printf("pmpi-lib: Rank %d got global_threshold_reduce = %u\n", rank, global_threshold_recv);
 
-    printf("----------------\n\n\n\n");
+	//printf("----------------\n\n\n\n");
     PMPI_Barrier(MPI_COMM_WORLD);
     init_margo_open_db_check_error(argc, argv);
 
