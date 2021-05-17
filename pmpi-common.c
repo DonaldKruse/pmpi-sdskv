@@ -65,7 +65,7 @@ void update_count_sdskv_put(unsigned *local_count,
     (*local_count)++;
     //printf("local count is %u\n", *local_count);
     if ((*local_count) >= threshold) {
-	unsigned ksize = strlen(key);
+	unsigned ksize = strlen(key); // TODO pass this in!
 	(*total_count) += (*local_count);
 	//printf("total count is %u\n", *total_count);
 	sdskv_put_check_err( (const void*) key, ksize,
