@@ -108,9 +108,9 @@ int main(int argc, char *argv[])
     unsigned ksize = strlen(key1);
 
 
-    unsigned long * value = malloc(sizeof(unsigned long));
-    unsigned vsize = sizeof(unsigned long);
-    unsigned long vsizeget = sizeof(unsigned long);
+    unsigned long * value = malloc(sizeof(unsigned));
+    unsigned vsize = sizeof(unsigned int);
+    unsigned long vsizeget = sizeof(unsigned int);
 
     //int value1 = 1;
     //int value2 = 2;
@@ -180,7 +180,8 @@ int main(int argc, char *argv[])
     		margo_finalize(mid);
     		return -1;
     	    }
-    	    printf("main-get: Key = %s, value = %lu, vsize = %u\n", key,  *value, vsize);
+    	    printf("main-get: Key = %s, value = %u, vsize = %u\n", 
+		   key,  *value, vsizeget);
     	    printf("\n");
     	} else {
     	    printf("Does Not Exist!\n\n");

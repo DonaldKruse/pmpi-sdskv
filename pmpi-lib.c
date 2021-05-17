@@ -219,7 +219,7 @@ int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest,
 {
 
     static const char* key_postfix = "MPI_Send";
-    static const hg_size_t dsize = sizeof(unsigned long);
+    static const hg_size_t dsize = sizeof(unsigned);
     static char* key = NULL;
     static int rank;
     int ret;
@@ -236,7 +236,7 @@ int MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest,
               int tag, MPI_Comm comm, MPI_Request *request)
 {
     static const char* key_postfix = "MPI_Isend";
-    static const hg_size_t dsize = sizeof(unsigned long);
+    static const hg_size_t dsize = sizeof(unsigned);
     static char* key = NULL;
     static int rank;
     int ret;
@@ -253,7 +253,7 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype,
              int source, int tag, MPI_Comm comm, MPI_Status *status)
 {
     static const char* key_postfix = "MPI_Recv";
-    static const hg_size_t dsize = sizeof(unsigned long);
+    static const hg_size_t dsize = sizeof(unsigned);
     static char* key = NULL;
     int ret;
     static int rank;
@@ -270,7 +270,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 	       MPI_Op op, int root, MPI_Comm comm)
 {
     static const char* key_postfix = "MPI_Reduce";
-    static const hg_size_t dsize = sizeof(unsigned long);
+    static const hg_size_t dsize = sizeof(unsigned);
     static char* key = NULL;
     int ret;
     static int rank;
