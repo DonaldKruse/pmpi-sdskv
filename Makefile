@@ -7,8 +7,9 @@ TARGETS= test iter-send-recv main-generate ping-pong pmpi-lib.so main-get
 OBJS_PMPI = pmpi-lib.o pmpi-common.o
 INCLUDE_PMPI = pmpi-common.h
 
-CFLAGS=-g -Wall `pkg-config --cflags margo` `pkg-config --cflags ssg`  `pkg-config --cflags sdskv-server` `pkg-config --cflags sdskv-client`
-LDLIBS=`pkg-config --libs sdskv-server` `pkg-config --libs sdskv-client` `pkg-config --libs margo` 
+#CFLAGS=-g -Wall `pkg-config --cflags margo` `pkg-config --cflags ssg`  `pkg-config --cflags sdskv-server` `pkg-config --cflags sdskv-client`
+CFLAGS=-O3 -Wall `pkg-config --cflags margo` `pkg-config --cflags ssg`  `pkg-config --cflags sdskv-server` `pkg-config --cflags sdskv-client`
+LDLIBS=`pkg-config --libs sdskv-server` `pkg-config --libs sdskv-client` `pkg-config --libs margo`
 
 all: $(TARGETS)
 

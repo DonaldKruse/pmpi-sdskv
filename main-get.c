@@ -30,10 +30,10 @@ int main(int argc, char *argv[])
     int ret;
     
 
-    if(argc != 5)
+    if(argc != 6)
     {
-        fprintf(stderr, "Usage: %s <sdskv_server_addr> <mplex_id> <db_name> <num_keys>\n", argv[0]);
-        fprintf(stderr, "  Example: %s tcp://localhost:1234 1 foo 1000\n", argv[0]);
+        fprintf(stderr, "Usage: %s <sdskv_server_addr> <mplex_id> <db_name> <num_keys> <outfile>\n", argv[0]);
+        fprintf(stderr, "  Example: %s tcp://localhost:1234 1 foo 1000 myout.txt\n", argv[0]);
         return(-1);
     }
     sdskv_svr_addr_str = argv[1];
